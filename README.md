@@ -1,4 +1,5 @@
-![mycords](https://github.com/user-attachments/assets/78d02715-1184-49c9-9a8b-4ff8bab3d9da)
+![mycords](https://github.com/user-attachments/assets/78d02715-1184-49c9-9a8b-4ff8bab3d9da)![mycordsexample](https://github.com/user-attachments/assets/a37a5732-47f5-4078-bcd9-0f2ad4e9270f)
+
 MyCords is a simple yet powerful addon that provides essential location data to help players navigate the vast world of Azeroth. It displays your current map ID, instance ID, and X/Y coordinates on the map, giving you precise details about your location in open-world zones. This addon automatically disables itself in battlegrounds, instances, and dungeons to ensure it stays focused on outdoor exploration.
 Features:
 
