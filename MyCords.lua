@@ -1,6 +1,6 @@
 --Main frame to display coordinates and map/instance IDs
 local cordsFrame = CreateFrame("Frame", "MyConcordanceFrame", UIParent, "BackdropTemplate")
-cordsFrame:SetSize(115, 50)  -- Frame size (width, height)
+cordsFrame:SetSize(100, 50)  -- Frame size (width, height)
 cordsFrame:SetPoint("CENTER") -- Default position
 cordsFrame:SetBackdrop({
     bgFile = "Interface/Tooltips/UI-Tooltip-Background",
