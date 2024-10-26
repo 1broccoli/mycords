@@ -1,6 +1,6 @@
---Main frame to display coordinates and map/instance IDs
-local cordsFrame = CreateFrame("Frame", "MyConcordanceFrame", UIParent, "BackdropTemplate")
-cordsFrame:SetSize(100, 50)  -- Frame size (width, height)
+-- Main frame to display coordinates and map/instance IDs
+local cordsFrame = CreateFrame("Frame", "MyCordsFrame", UIParent, "BackdropTemplate")
+cordsFrame:SetSize(100, 50)  -- Initial frame size (width, height)
 cordsFrame:SetPoint("CENTER") -- Default position
 cordsFrame:SetBackdrop({
     bgFile = "Interface/Tooltips/UI-Tooltip-Background",
@@ -26,10 +26,16 @@ local function UpdateCoordinateDisplay()
     local instanceID = select(8, GetInstanceInfo()) or 0
 
     -- Set text with whole numbers for X and Y, color white for numbers
-    coordinateText:SetText(string.format(
+    local text = string.format(
         "|cffffff00X:|r |cffffffff%d|r  |cffffff00Y:|r |cffffffff%d|r\n|cffffff00MapID:|r |cffffffff%d|r\n|cffffff00InstanceID:|r |cffffffff%d|r",
         math.floor(x * 100), math.floor(y * 100), mapID, instanceID
-    ))
+    )
+    
+    coordinateText:SetText(text)
+
+    -- Dynamically adjust frame width based on the text width
+    local textWidth = coordinateText:GetStringWidth() + 10  -- Add some padding
+    cordsFrame:SetWidth(textWidth)
 end
 
 -- Left-click to print coordinates in chat

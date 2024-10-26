@@ -1,7 +1,8 @@
 ## Interface: 11403  # Adjust version depending on WoW version
-## Title: My Cords
+## Title: My Cords 
 ## Author: Broccoli
+## Website: https://github.com/1broccoli
 ## Version: 1.1
 ## Notes: A simple addon that prints player coordinates and instance ID.
-## SavedVariables: MyCordsData
+## SavedVariables: MyConcordanceData 
 MyCords.lua
