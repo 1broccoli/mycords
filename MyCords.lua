@@ -1,3 +1,11 @@
+-- Initialize saved variables if they don't exist
+if not MyCordsData then
+    MyCordsData = {
+        showMapID = true,  -- Default to true
+        showInstanceID = true  -- Default to true
+    }
+end
+
 -- Main frame to display coordinates and map/instance IDs
 local cordsFrame = CreateFrame("Frame", "MyCordsFrame", UIParent, "BackdropTemplate")
 cordsFrame:SetSize(100, 50)  -- Initial frame size (width, height)
@@ -9,7 +17,7 @@ cordsFrame:SetBackdrop({
     insets = { left = 4, right = 4, top = 4, bottom = 4 }
 })
 cordsFrame:SetBackdropColor(0, 0, 0, 0.8)  -- Background color (black with transparency)
-cordsFrame:SetBackdropBorderColor(0, 0, 0)  -- Border color (black)
+cordsFrame:SetBackdropBorderColor(0, 0, 0)  -- Border color
 
 -- Text to display coordinates, map ID, and instance ID
 local coordinateText = cordsFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
@@ -26,32 +34,65 @@ local function UpdateCoordinateDisplay()
     local instanceID = select(8, GetInstanceInfo()) or 0
 
     -- Set text with whole numbers for X and Y, color white for numbers
-    local text = string.format(
-        "|cffffff00X:|r |cffffffff%d|r  |cffffff00Y:|r |cffffffff%d|r\n|cffffff00MapID:|r |cffffffff%d|r\n|cffffff00InstanceID:|r |cffffffff%d|r",
-        math.floor(x * 100), math.floor(y * 100), mapID, instanceID
-    )
+    local text = string.format("|cffffff00X:|r |cffffffff%d|r  |cffffff00Y:|r |cffffffff%d|r", 
+        math.floor(x * 100), math.floor(y * 100))
+
+    if MyCordsData.showMapID then
+        text = text .. string.format("\n|cffffff00Map ID:|r |cffffffff%d|r", mapID)  -- Set Map ID text color to yellow
+    end
     
+    if MyCordsData.showInstanceID then
+        text = text .. string.format("\n|cffffff00Instance ID:|r |cffffffff%d|r", instanceID)  -- Set Instance ID text color to yellow
+    end
+
     coordinateText:SetText(text)
 
-    -- Dynamically adjust frame width based on the text width
+    -- Dynamically adjust frame width and height based on the text width and height
     local textWidth = coordinateText:GetStringWidth() + 10  -- Add some padding
-    cordsFrame:SetWidth(textWidth)
+    local textHeight = coordinateText:GetStringHeight() + 10  -- Add some padding
+    cordsFrame:SetSize(textWidth, textHeight)
 end
 
--- Left-click to print coordinates in chat
+-- Left-click to print coordinates in chat, right-click to show settings
 cordsFrame:SetScript("OnMouseUp", function(self, button)
     if button == "LeftButton" then
-        local mapID = C_Map.GetBestMapForUnit("player") or 0  -- Default to 0 if invalid
+        local mapID = C_Map.GetBestMapForUnit("player") or 0
         local position = C_Map.GetPlayerMapPosition(mapID, "player")
 
         local x = position and position.x or 0
         local y = position and position.y or 0
         local instanceID = select(8, GetInstanceInfo()) or 0
 
-        print(string.format(
-            "|cffffff00X:|r |cffffffff%d|r |cffffff00Y:|r |cffffffff%d|r |cffffff00Map ID:|r |cffffffff%d|r |cffffff00Instance ID:|r |cffffffff%d|r",
-            math.floor(x * 100), math.floor(y * 100), mapID, instanceID
-        ))
+        -- Build the text to print based on checkbox states
+        local text = string.format(
+            "|cffffff00X:|r |cffffffff%d|r |cffffff00Y:|r |cffffffff%d|r",
+            math.floor(x * 100), math.floor(y * 100)
+        )
+
+        if MyCordsData.showMapID then
+            text = text .. string.format(" |cffffff00Map ID:|r |cffffffff%d|r", mapID)
+        end
+
+        if MyCordsData.showInstanceID then
+            text = text .. string.format(" |cffffff00Instance ID:|r |cffffffff%d|r", instanceID)
+        end
+
+        -- Print the assembled text in chat
+        print(text)
+    elseif button == "RightButton" then
+        -- Debug: Check if MyCordsSettingsFrame is defined
+        if MyCordsSettingsFrame then
+            -- Toggle settings frame visibility
+            if MyCordsSettingsFrame:IsShown() then
+                MyCordsSettingsFrame:Hide()
+                print("Settings Frame Hidden")  -- Debug message
+            else
+                MyCordsSettingsFrame:Show()
+                print("Settings Frame Shown")  -- Debug message
+            end
+        else
+            print("MyCordsSettingsFrame is nil")  -- Debug message
+        end
     end
 end)
 
@@ -65,5 +106,62 @@ cordsFrame:SetScript("OnDragStop", function(self) self:StopMovingOrSizing() end)
 -- Update coordinates on frame update
 cordsFrame:SetScript("OnUpdate", UpdateCoordinateDisplay)
 
--- Initialize the display
-UpdateCoordinateDisplay()
+-- Create a settings frame for checkbox options
+local MyCordsSettingsFrame = CreateFrame("Frame", "MyCordsSettingsFrame", UIParent, "BackdropTemplate")
+MyCordsSettingsFrame:SetSize(160, 70)  -- (Width), (height) Frame size
+MyCordsSettingsFrame:SetPoint("BOTTOM", cordsFrame, "TOP", 0, 5) -- Anchor it to the bottom of the main frame
+MyCordsSettingsFrame:SetBackdrop({
+    bgFile = "Interface/Tooltips/UI-Tooltip-Background",
+    edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
+    tile = true, tileSize = 4, edgeSize = 8, -- Thickness of the border 
+    insets = { left = 4, right = 4, top = 4, bottom = 4 } -- Space between the border and the content
+})
+MyCordsSettingsFrame:SetBackdropColor(0, 0, 0, 0.8)  -- Background color
+MyCordsSettingsFrame:SetBackdropBorderColor(0, 0, 0)  -- Border color
+MyCordsSettingsFrame:Hide()  -- Hide settings frame on startup
+
+-- Checkbox for showing/hiding MapID
+local mapIDCheckbox = CreateFrame("CheckButton", "ShowMapIDCheckbox", MyCordsSettingsFrame, "ChatConfigCheckButtonTemplate")
+mapIDCheckbox:SetPoint("TOPLEFT", 10, -10)
+mapIDCheckbox.text = mapIDCheckbox:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+mapIDCheckbox.text:SetPoint("LEFT", mapIDCheckbox, "RIGHT", 5, 0)
+mapIDCheckbox.text:SetText("|cffffff00Show|r |cffffffffMap ID|r")  -- Set "Show" text to yellow and "Map ID" text to white
+mapIDCheckbox:SetChecked(MyCordsData.showMapID)  -- Load saved variable state
+mapIDCheckbox:SetScript("OnClick", function(self)
+    MyCordsData.showMapID = self:GetChecked()  -- Save state
+    UpdateCoordinateDisplay()  -- Apply change immediately
+end)
+
+-- Checkbox for showing/hiding InstanceID
+local instanceIDCheckbox = CreateFrame("CheckButton", "ShowInstanceIDCheckbox", MyCordsSettingsFrame, "ChatConfigCheckButtonTemplate")
+instanceIDCheckbox:SetPoint("TOPLEFT", mapIDCheckbox, "BOTTOMLEFT", 0, -5)
+instanceIDCheckbox.text = instanceIDCheckbox:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+instanceIDCheckbox.text:SetPoint("LEFT", instanceIDCheckbox, "RIGHT", 5, 0)
+instanceIDCheckbox.text:SetText("|cffffff00Show|r |cffffffffInstance ID|r")  -- Set "Show" text to white
+instanceIDCheckbox:SetChecked(MyCordsData.showInstanceID)  -- Load saved variable state
+instanceIDCheckbox:SetScript("OnClick", function(self)
+    MyCordsData.showInstanceID = self:GetChecked()  -- Save state
+    UpdateCoordinateDisplay()  -- Apply change immediately
+end)
+
+-- Function to update the checkbox states based on saved variables
+local function UpdateCheckboxStates()
+    if mapIDCheckbox and instanceIDCheckbox then
+        mapIDCheckbox:SetChecked(MyCordsData.showMapID)
+        instanceIDCheckbox:SetChecked(MyCordsData.showInstanceID)
+    end
+end
+
+-- Call the update function to set checkbox states correctly when settings frame is shown
+MyCordsSettingsFrame:SetScript("OnShow", UpdateCheckboxStates)
+
+-- Register the addon to save variables on logout
+local function MyCords_SaveVariables()
+    -- Save the data before logout
+    MyCordsData.showMapID = mapIDCheckbox:GetChecked()
+    MyCordsData.showInstanceID = instanceIDCheckbox:GetChecked()
+end
+
+-- Event handler to save variables on logout
+MyCordsSettingsFrame:RegisterEvent("PLAYER_LOGOUT")
+MyCordsSettingsFrame:SetScript("OnEvent", MyCords_SaveVariables)
