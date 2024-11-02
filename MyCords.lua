@@ -80,18 +80,10 @@ cordsFrame:SetScript("OnMouseUp", function(self, button)
         -- Print the assembled text in chat
         print(text)
     elseif button == "RightButton" then
-        -- Debug: Check if MyCordsSettingsFrame is defined
-        if MyCordsSettingsFrame then
-            -- Toggle settings frame visibility
-            if MyCordsSettingsFrame:IsShown() then
-                MyCordsSettingsFrame:Hide()
-                print("Settings Frame Hidden")  -- Debug message
-            else
-                MyCordsSettingsFrame:Show()
-                print("Settings Frame Shown")  -- Debug message
-            end
+        if MyCordsSettingsFrame:IsShown() then
+            MyCordsSettingsFrame:Hide()
         else
-            print("MyCordsSettingsFrame is nil")  -- Debug message
+            MyCordsSettingsFrame:Show()
         end
     end
 end)
@@ -108,13 +100,13 @@ cordsFrame:SetScript("OnUpdate", UpdateCoordinateDisplay)
 
 -- Create a settings frame for checkbox options
 local MyCordsSettingsFrame = CreateFrame("Frame", "MyCordsSettingsFrame", UIParent, "BackdropTemplate")
-MyCordsSettingsFrame:SetSize(160, 70)  -- (Width), (height) Frame size
+MyCordsSettingsFrame:SetSize(160, 70)  -- Frame size
 MyCordsSettingsFrame:SetPoint("BOTTOM", cordsFrame, "TOP", 0, 5) -- Anchor it to the bottom of the main frame
 MyCordsSettingsFrame:SetBackdrop({
     bgFile = "Interface/Tooltips/UI-Tooltip-Background",
     edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
-    tile = true, tileSize = 4, edgeSize = 8, -- Thickness of the border 
-    insets = { left = 4, right = 4, top = 4, bottom = 4 } -- Space between the border and the content
+    tile = true, tileSize = 4, edgeSize = 8,
+    insets = { left = 4, right = 4, top = 4, bottom = 4 }
 })
 MyCordsSettingsFrame:SetBackdropColor(0, 0, 0, 0.8)  -- Background color
 MyCordsSettingsFrame:SetBackdropBorderColor(0, 0, 0)  -- Border color
@@ -125,11 +117,11 @@ local mapIDCheckbox = CreateFrame("CheckButton", "ShowMapIDCheckbox", MyCordsSet
 mapIDCheckbox:SetPoint("TOPLEFT", 10, -10)
 mapIDCheckbox.text = mapIDCheckbox:CreateFontString(nil, "OVERLAY", "GameFontNormal")
 mapIDCheckbox.text:SetPoint("LEFT", mapIDCheckbox, "RIGHT", 5, 0)
-mapIDCheckbox.text:SetText("|cffffff00Show|r |cffffffffMap ID|r")  -- Set "Show" text to yellow and "Map ID" text to white
-mapIDCheckbox:SetChecked(MyCordsData.showMapID)  -- Load saved variable state
+mapIDCheckbox.text:SetText("|cffffff00Show|r |cffffffffMap ID|r")
+mapIDCheckbox:SetChecked(MyCordsData.showMapID)
 mapIDCheckbox:SetScript("OnClick", function(self)
-    MyCordsData.showMapID = self:GetChecked()  -- Save state
-    UpdateCoordinateDisplay()  -- Apply change immediately
+    MyCordsData.showMapID = self:GetChecked()
+    UpdateCoordinateDisplay()
 end)
 
 -- Checkbox for showing/hiding InstanceID
@@ -137,14 +129,14 @@ local instanceIDCheckbox = CreateFrame("CheckButton", "ShowInstanceIDCheckbox", 
 instanceIDCheckbox:SetPoint("TOPLEFT", mapIDCheckbox, "BOTTOMLEFT", 0, -5)
 instanceIDCheckbox.text = instanceIDCheckbox:CreateFontString(nil, "OVERLAY", "GameFontNormal")
 instanceIDCheckbox.text:SetPoint("LEFT", instanceIDCheckbox, "RIGHT", 5, 0)
-instanceIDCheckbox.text:SetText("|cffffff00Show|r |cffffffffInstance ID|r")  -- Set "Show" text to white
-instanceIDCheckbox:SetChecked(MyCordsData.showInstanceID)  -- Load saved variable state
+instanceIDCheckbox.text:SetText("|cffffff00Show|r |cffffffffInstance ID|r")
+instanceIDCheckbox:SetChecked(MyCordsData.showInstanceID)
 instanceIDCheckbox:SetScript("OnClick", function(self)
-    MyCordsData.showInstanceID = self:GetChecked()  -- Save state
-    UpdateCoordinateDisplay()  -- Apply change immediately
+    MyCordsData.showInstanceID = self:GetChecked()
+    UpdateCoordinateDisplay()
 end)
 
--- Function to update the checkbox states based on saved variables
+-- Function to update checkbox states from saved variables
 local function UpdateCheckboxStates()
     if mapIDCheckbox and instanceIDCheckbox then
         mapIDCheckbox:SetChecked(MyCordsData.showMapID)
@@ -152,16 +144,23 @@ local function UpdateCheckboxStates()
     end
 end
 
--- Call the update function to set checkbox states correctly when settings frame is shown
+-- Load saved checkbox states when settings frame is shown
 MyCordsSettingsFrame:SetScript("OnShow", UpdateCheckboxStates)
 
--- Register the addon to save variables on logout
+-- Save the checkbox states when the player logs out
 local function MyCords_SaveVariables()
-    -- Save the data before logout
     MyCordsData.showMapID = mapIDCheckbox:GetChecked()
     MyCordsData.showInstanceID = instanceIDCheckbox:GetChecked()
 end
 
--- Event handler to save variables on logout
-MyCordsSettingsFrame:RegisterEvent("PLAYER_LOGOUT")
-MyCordsSettingsFrame:SetScript("OnEvent", MyCords_SaveVariables)
+-- Event handler for loading and saving variables
+local eventFrame = CreateFrame("Frame")
+eventFrame:RegisterEvent("ADDON_LOADED")
+eventFrame:RegisterEvent("PLAYER_LOGOUT")
+eventFrame:SetScript("OnEvent", function(self, event, addon)
+    if event == "ADDON_LOADED" and addon == "MyCords" then
+        UpdateCheckboxStates()  -- Load checkbox states on addon load
+    elseif event == "PLAYER_LOGOUT" then
+        MyCords_SaveVariables()  -- Save checkbox states on logout
+    end
+end)

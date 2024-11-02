@@ -1,8 +1,8 @@
 ## Interface: 11403  # Current interface version for WoW Classic & Sod
 ## Title: My Cords 
-## Author: Broccoli
+## Author: Broccoli / Pegga
 ## Website: https://github.com/1broccoli
-## Version: 1.2
+## Version: 1.3.0
 ## Notes: A simple addon that prints player coordinates and instance ID.
 ## SavedVariables:  MyCordsData, MyCordsSettings
 ## X-WoW-Required-Interface: 11403
