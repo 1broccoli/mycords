@@ -1,15 +1,16 @@
--- Initialize saved variables if they don't exist
+-- Initialize saved variables
 if not MyCordsData then
     MyCordsData = {
         showMapID = true,  -- Default to true
-        showInstanceID = true  -- Default to true
+        showInstanceID = true,  -- Default to true
+        framePosition = { point = "CENTER", relativeTo = nil, relativePoint = "CENTER", xOfs = 0, yOfs = 0 }  -- Default position
     }
 end
 
 -- Main frame to display coordinates and map/instance IDs
 local cordsFrame = CreateFrame("Frame", "MyCordsFrame", UIParent, "BackdropTemplate")
 cordsFrame:SetSize(100, 50)  -- Initial frame size (width, height)
-cordsFrame:SetPoint("CENTER") -- Default position
+cordsFrame:SetPoint(MyCordsData.framePosition.point, MyCordsData.framePosition.relativeTo, MyCordsData.framePosition.relativePoint, MyCordsData.framePosition.xOfs, MyCordsData.framePosition.yOfs)
 cordsFrame:SetBackdrop({
     bgFile = "Interface/Tooltips/UI-Tooltip-Background",
     edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
@@ -93,7 +94,11 @@ cordsFrame:SetMovable(true)
 cordsFrame:EnableMouse(true)
 cordsFrame:RegisterForDrag("LeftButton")
 cordsFrame:SetScript("OnDragStart", function(self) self:StartMoving() end)
-cordsFrame:SetScript("OnDragStop", function(self) self:StopMovingOrSizing() end)
+cordsFrame:SetScript("OnDragStop", function(self)
+    self:StopMovingOrSizing()
+    local point, relativeTo, relativePoint, xOfs, yOfs = self:GetPoint()
+    MyCordsData.framePosition = { point = point, relativeTo = relativeTo, relativePoint = relativePoint, xOfs = xOfs, yOfs = yOfs }
+end)
 
 -- Update coordinates on frame update
 cordsFrame:SetScript("OnUpdate", UpdateCoordinateDisplay)
@@ -147,10 +152,12 @@ end
 -- Load saved checkbox states when settings frame is shown
 MyCordsSettingsFrame:SetScript("OnShow", UpdateCheckboxStates)
 
--- Save the checkbox states when the player logs out
+-- Save the checkbox states and frame position when the player logs out
 local function MyCords_SaveVariables()
     MyCordsData.showMapID = mapIDCheckbox:GetChecked()
     MyCordsData.showInstanceID = instanceIDCheckbox:GetChecked()
+    local point, relativeTo, relativePoint, xOfs, yOfs = cordsFrame:GetPoint()
+    MyCordsData.framePosition = { point = point, relativeTo = relativeTo, relativePoint = relativePoint, xOfs = xOfs, yOfs = yOfs }
 end
 
 -- Event handler for loading and saving variables
@@ -160,7 +167,8 @@ eventFrame:RegisterEvent("PLAYER_LOGOUT")
 eventFrame:SetScript("OnEvent", function(self, event, addon)
     if event == "ADDON_LOADED" and addon == "MyCords" then
         UpdateCheckboxStates()  -- Load checkbox states on addon load
+        cordsFrame:SetPoint(MyCordsData.framePosition.point, MyCordsData.framePosition.relativeTo, MyCordsData.framePosition.relativePoint, MyCordsData.framePosition.xOfs, MyCordsData.framePosition.yOfs)
     elseif event == "PLAYER_LOGOUT" then
-        MyCords_SaveVariables()  -- Save checkbox states on logout
+        MyCords_SaveVariables()  -- Save checkbox states and frame position on logout
     end
 end)
